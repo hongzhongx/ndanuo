@@ -75,9 +75,9 @@ rl.on('line', async (input) => {
                 console.log(`正在创建账号"${account_name}"中…`);
                 const s = await createAccount(account_name, pass);
                 if(s.status == true) {
-                    let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.new_nfa, "show_name", "[]");
+                    let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.new_nfa, "short", "[]");
                     const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
-                    console.log(`创建账号${account_name}成功，系统还赠送了一个法宝${results[0]}（NFA序号=#${s.new_nfa}）。`);
+                    console.log(`创建账号${account_name}成功，系统还赠送了一个法宝${results.eval_result[0].value.v}（NFA序号=#${s.new_nfa}）。`);
 
                     const [newAcc] = await taiyi.api.getAccountsAsync([account_name]);
                     console.log(`${account_name}真气量为${newAcc.qi}`);
@@ -178,7 +178,7 @@ rl.on('line', async (input) => {
                     if(result.type == "contract_result") {
                         let cresult = result.value;
                         cresult.contract_affecteds.forEach( (affect) => {
-                            if(affect.type == "contract_logger") {
+                            if(affect.type == "contract_narrate") {
                                 results.push(affect.value.message);
                             }
                         });
@@ -186,7 +186,7 @@ rl.on('line', async (input) => {
                 });
             }
             else {
-                results = await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, action, params);
+                results = (await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, action, params)).narrate_logs;
             }
 
             let ss = "";
