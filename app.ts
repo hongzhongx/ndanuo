@@ -6,7 +6,7 @@ import { createAccount, convertAsset, legacyStringToAssect, assetToLegacyString 
 
 let taiyi = require('@taiyinet/taiyi-js');
 taiyi.api.setOptions({ 
-	url: 'ws://127.0.0.1:8090',
+	url: 'ws://47.109.49.30:8090',
 	chain_id: "18dcf0a285365fc58b71f18b3d3fec954aa0c141c44e4e5cb4cf777b9eab274e"
 });
 
@@ -48,7 +48,7 @@ rl.on('line', async (input) => {
             account_name = args[1];
             const approving_account_objects = await taiyi.api.getAccountsAsync( [account_name] );
             if( approving_account_objects.length == 0 || approving_account_objects[0].name == null) {
-                console.warn(`账号${account_name}不存在，你可以使用命令“signup 账号名 账号密码”创建新账号。`);
+                console.warn(`账号${account_name}不存在，你可以使用命令“signup 账号名 账号密码”创建新账号。\n`);
                 return;
             }
 
@@ -57,14 +57,14 @@ rl.on('line', async (input) => {
 
             const approving_acct = approving_account_objects[0];
             if(keys.active != approving_acct.active.key_auths[0][0]) {
-                console.warn(`你的密码对该账号无效，请重新登录。`);
+                console.warn(`你的密码对该账号无效，请重新登录。\n`);
                 return;
             }
 
             account_wif = taiyi.auth.getPrivateKeys(account_name, pass).active; //在本地仅缓存了active私钥
             console.log('登录成功。');
             console.log('请选择角色，命令是“play 角色名称|NFA序号”。');
-            console.log('如果要创建新角色，命令是“new 角色姓氏 角色名”。');
+            console.log('如果要创建新角色，命令是“new 角色姓氏 角色名”。\n');
             return;
         }
 
@@ -72,32 +72,32 @@ rl.on('line', async (input) => {
             account_name = args[1];
             let pass = args[2];
             try {
-                console.log(`正在创建账号"${account_name}"中…`);
+                console.log(`正在创建账号"${account_name}"中...`);
                 const s = await createAccount(account_name, pass);
                 if(s.status == true) {
                     let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.new_nfa, "short", "[]");
-                    const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
+                    // const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
                     console.log(`创建账号${account_name}成功，系统还赠送了一个法宝${results.eval_result[0].value.v}（NFA序号=#${s.new_nfa}）。`);
 
                     const [newAcc] = await taiyi.api.getAccountsAsync([account_name]);
                     console.log(`${account_name}真气量为${newAcc.qi}`);
 
-                    console.log(`请使用login命令登录账号。`);
+                    console.log(`请使用login命令登录账号。\n`);
                 }
                 else
-                    console.log(`创建账号${account_name}失败了！`);
+                    console.log(`创建账号${account_name}失败了！\n`);
             }
             catch(err) {
                 console.log(err.toString());
                 if(err.payload)
                     console.log(err.payload);
-                console.log(`创建账号${account_name}失败了！`);
+                console.log(`创建账号${account_name}失败了！\n`);
             };    
             return;
         }
         
         if(account_name == "" || account_wif == "") {
-            console.log('请使用账号密码进行登录，命令是“login 账号名 密码”。');
+            console.log('请使用账号密码进行登录，命令是“login 账号名 密码”。\n');
             return;
         }
         
@@ -122,28 +122,38 @@ rl.on('line', async (input) => {
                 console.log(err.toString());
                 if(err.payload)
                     console.log(JSON.stringify(err.payload));
-                console.log(`创建角色失败了！`);
+                console.log(`创建角色失败了！\n`);
                 return;
             };
 
-            console.log(`创建角色${family_name}${last_name}成功，请使用play命令开始游戏。`);
+            console.log(`创建角色${family_name}${last_name}成功。`);
+            console.log(`请操作法宝来出生角色和升级角色，然后可以使用play命令夺舍这个角色开始游戏。\n`);
             return;
         }
 
         if(action == "play") {
             if(isInteger(args[1])) {
                 play_nfa = parseInt(args[1], 10);
-                console.log(`你好，现在你已经是NFA#${play_nfa}。`);
+                let results = await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, "short", "[]");
+                console.log(`你好，${results.eval_result[0].value.v}（#${play_nfa}）。`);
+                console.log(`注意，你的元神现在在一个物品里面，不要做出太出格的事情。\n`);
             }
             else {
                 let actor_name = args[1];
-                console.log(actor_name)
                 const actor_info = await taiyi.api.findActorAsync(actor_name);
                 if(actor_info == null)
-                    console.warn(`角色${actor_name}不存在。`);
+                    console.warn(`角色${actor_name}不存在。\n`);
                 else {
                     play_nfa = actor_info.nfa_id;
-                    console.log(`你好，${actor_name}。`);
+                    let results = (await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, "welcome", "[]")).narrate_logs;
+                    let ss = "";
+                    results.forEach( (result) => {
+                        ss += result + "\n" + NOR;
+                    });        
+                    ss = ansi(ss);
+                    console.log(ss);
+
+                    console.log(`你好，${actor_name}，欢迎来到大傩世界。\n`);
                 }
             }
 
@@ -151,7 +161,7 @@ rl.on('line', async (input) => {
         }
 
         if(play_nfa == "") {
-            console.log('请选择角色或者NFA，命令是“play 角色名称|NFA序号”。');
+            console.log('请选择角色或者NFA，命令是“play 角色名称|NFA序号”。\n');
             return;
         }
 
@@ -193,7 +203,6 @@ rl.on('line', async (input) => {
             results.forEach( (result) => {
                 ss += result + "\n" + NOR;
             });
-            ss += "\n" + NOR;
 
             ss = ansi(ss);
             console.log(ss);
@@ -207,7 +216,7 @@ rl.on('line', async (input) => {
 });
  
 rl.on('close', () => {
-    console.log('再见！');
+    console.log('\n再见！');
     process.exit(0); // 退出程序
 });
 
