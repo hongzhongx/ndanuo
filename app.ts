@@ -2,9 +2,10 @@ import * as readline from 'readline';
 import * as ANSI from './ansi';
 import { createAccount, convertAsset, legacyStringToAssect, assetToLegacyString } from "./common";
 
+let server_ip = "47.109.49.30"
 let taiyi = require('@taiyinet/taiyi-js');
 taiyi.api.setOptions({ 
-	url: 'ws://47.109.49.30:8090',
+	url: 'ws://'+server_ip+':8090',
 	chain_id: "18dcf0a285365fc58b71f18b3d3fec954aa0c141c44e4e5cb4cf777b9eab274e"
 });
 
@@ -70,7 +71,7 @@ rl.on('line', async (input) => {
             let pass = args[2];
             try {
                 console.log(`正在创建账号${ANSI.YEL}${account_name}${ANSI.NOR}中...`);
-                const s = await createAccount(account_name, pass);
+                const s = await createAccount(account_name, pass, 'http://'+server_ip+':8080');
                 if(s.status == true) {
                     let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.new_nfa, "short", "[]");
                     // const nfa = await taiyi.api.findNfaAsync(s.new_nfa);

@@ -20,8 +20,8 @@ async function writeFile(filename: string, data: Buffer) {
     })
 }
 
-export async function createAccount(username: string, password: string): Promise<{status: boolean, name: string, new_nfa: number}> {
-    const response = await fetch('http://127.0.0.1:8080/create', {
+export async function createAccount(username: string, password: string, server_url: string = "http://127.0.0.1:8080"): Promise<{status: boolean, name: string, new_nfa: number}> {
+    const response = await fetch(server_url + '/create', {
         method: 'POST',
         body: `username=${ username }&password=${ password }`,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
