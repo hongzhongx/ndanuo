@@ -137,7 +137,12 @@ rl.on('line', async (input) => {
             if(isInteger(args[1])) {
                 play_nfa = parseInt(args[1], 10);
                 let results = await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, "short", "[]");
-                console.log(`你好，${ANSI.YEL}${results.eval_result[0].value.v}${ANSI.NOR}（#${play_nfa}）。`);
+                console.log(`你好，${ANSI.YEL}${
+                  results.eval_result && 
+                  results.eval_result[0] && 
+                  results.eval_result[0].value ? 
+                  results.eval_result[0].value.v : '未知'
+                }${ANSI.NOR}（#${play_nfa}）。`);
                 console.log(`注意，你的元神现在在一个物品里面，不要做出太出格的事情。\n`);
                 rl.prompt();
             }
