@@ -153,8 +153,8 @@ rl.on('line', async (input) => {
                     console.warn(`角色${ANSI.YEL}${actor_name}${ANSI.NOR}不存在。\n`);
                 else {
                     play_nfa = actor_info.nfa_id;
-                    let results = (await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, "welcome", "[]")).narrate_logs;
                     let ss = "";
+                    let results = (await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, "welcome", "[]")).narrate_logs;
                     results.forEach( (result) => {
                         ss += result + "\n" + ANSI.NOR;
                     });        
@@ -162,6 +162,14 @@ rl.on('line', async (input) => {
                     console.log(ss);
 
                     console.log(`你好，${ANSI.YEL}${actor_name}${ANSI.NOR}，欢迎来到大傩世界。\n`);
+
+                    ss = "";
+                    results = (await taiyi.api.evalNfaActionWithStringArgsAsync(play_nfa, "look", '[""]')).narrate_logs;
+                    results.forEach( (result) => {
+                        ss += result + "\n" + ANSI.NOR;
+                    });        
+                    ss = ANSI.ansi(ss);
+                    console.log(ss);
                 }
             }
 
