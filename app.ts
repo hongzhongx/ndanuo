@@ -1,8 +1,11 @@
 import * as readline from 'readline';
 import * as ANSI from './ansi';
-import { createAccount, convertAsset, legacyStringToAssect, assetToLegacyString } from "./common";
+import { 
+    createAccount, giveMeYantongshi, injectMaterialToNfa, depositResourceToNfa,
+    convertAsset, legacyStringToAssect, assetToLegacyString 
+} from "./common";
 
-let server_ip = "47.109.49.30"
+let server_ip = "127.0.0.1"
 let taiyi = require('@taiyinet/taiyi-js');
 taiyi.api.setOptions({ 
 	url: 'ws://'+server_ip+':8090',
@@ -28,6 +31,11 @@ const rl = readline.createInterface({
 });
 
 console.log('请使用账号密码进行登录，命令是“login 账号名 密码”。');
+console.log('创建新账号，命令是“signup 账号名 密码”。\n');
+console.log('免费获得一个衍童石，命令是“give_me_yantongshi”');
+console.log('免费给实体注入材质，命令是“inject_material_to_nfa nfa序号 数量 类型”。比如“inject_material_to_nfa 23 2000 FABR”');
+console.log('免费给实体加入资源，命令是“deposit_resource_to_nfa nfa序号 数量 类型”。比如“deposit_resource_to_nfa 23 300000 GOLD”\n');
+
 rl.prompt();
 
 rl.on('line', async (input) => {
@@ -73,9 +81,7 @@ rl.on('line', async (input) => {
                 console.log(`正在创建账号${ANSI.YEL}${account_name}${ANSI.NOR}中...`);
                 const s = await createAccount(account_name, pass, 'http://'+server_ip+':8080');
                 if(s.status == true) {
-                    let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.new_nfa, "short", "[]");
-                    // const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
-                    console.log(`创建账号${ANSI.YEL}${account_name}${ANSI.NOR}成功，系统还赠送了一个法宝${ANSI.BLU}${results.eval_result[0].value.v}${ANSI.NOR}（NFA序号=#${s.new_nfa}）。`);
+                    console.log(`创建账号${ANSI.YEL}${account_name}${ANSI.NOR}成功。`);
 
                     const [newAcc] = await taiyi.api.getAccountsAsync([account_name]);
                     console.log(`${ANSI.YEL}${account_name}${ANSI.NOR}真气量为${ANSI.GRN}${newAcc.qi}${ANSI.NOR}`);
@@ -101,6 +107,80 @@ rl.on('line', async (input) => {
             return;
         }
         
+        if(action == "give_me_yantongshi") {
+            try {
+                console.log(`正在为${ANSI.YEL}${account_name}${ANSI.NOR}创建衍童石...`);
+                const s = await giveMeYantongshi(account_name, 'http://'+server_ip+':8080');
+                if(s.status == true) {
+                    let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.new_nfa, "short", "[]");
+                    // const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
+                    console.log(`系统赠送了一个法宝${ANSI.BLU}${results.eval_result[0].value.v}${ANSI.NOR}（NFA序号=#${s.new_nfa}）。`);
+                    console.log(`你可以使用play命令操控这个衍童石，命令是“play ${s.new_nfa}”。`);
+                    console.log(`操作衍童石安装在一个区域，命令是“set_zone [区域id]”。比如“set_zone [9]”将衍童石安装到牛心村。\n`);
+                }
+                else
+                    console.log(`创建${ANSI.YEL}衍童石${ANSI.NOR}失败了！\n`);
+            }
+            catch(err) {
+                console.log(err.toString());
+                if(err.payload)
+                    console.log(err.payload);
+                console.log(`创建${ANSI.YEL}衍童石${ANSI.NOR}失败了！\n`);
+            };    
+            rl.prompt();
+            return;
+        }
+
+        if(action == "inject_material_to_nfa") {
+            let nfa_id = Number(args[1]);
+            let amount = Number(args[2]);
+            let type = args[3];
+            try {
+                console.log(`正在为nfa #${nfa_id}注入材质...`);
+                const s = await injectMaterialToNfa(nfa_id, amount, type, 'http://'+server_ip+':8080');
+                if(s.status == true) {
+                    let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.nfa, "short", "[]");
+                    // const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
+                    console.log(`法宝${ANSI.BLU}${results.eval_result[0].value.v}${ANSI.NOR}（NFA序号=#${s.nfa}）注入材质成功。\n`);
+                }
+                else
+                    console.log(`NFA注入材质失败了！\n`);
+            }
+            catch(err) {
+                console.log(err.toString());
+                if(err.payload)
+                    console.log(err.payload);
+                console.log(`NFA注入材质失败了！\n`);
+            };    
+            rl.prompt();
+            return;
+        }
+
+        if(action == "deposit_resource_to_nfa") {
+            let nfa_id = Number(args[1]);
+            let amount = Number(args[2]);
+            let type = args[3];
+            try {
+                console.log(`正在为nfa #${nfa_id}增加资源...`);
+                const s = await depositResourceToNfa(nfa_id, amount, type, 'http://'+server_ip+':8080');
+                if(s.status == true) {
+                    let results = await taiyi.api.evalNfaActionWithStringArgsAsync(s.nfa, "short", "[]");
+                    // const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
+                    console.log(`法宝${ANSI.BLU}${results.eval_result[0].value.v}${ANSI.NOR}（NFA序号=#${s.nfa}）增加资源成功。\n`);
+                }
+                else
+                    console.log(`NFA增加资源失败了！\n`);
+            }
+            catch(err) {
+                console.log(err.toString());
+                if(err.payload)
+                    console.log(err.payload);
+                console.log(`NFA增加资源失败了！\n`);
+            };    
+            rl.prompt();
+            return;
+        }
+
         if(action == "new") {
             // new 角色姓氏 角色名
             let family_name = args[1];
@@ -128,7 +208,9 @@ rl.on('line', async (input) => {
             };
 
             console.log(`创建角色${ANSI.YEL}${family_name}${last_name}${ANSI.NOR}成功。`);
-            console.log(`请操作法宝来出生角色和升级角色，然后可以使用play命令夺舍这个角色开始游戏。\n`);
+            console.log(`请操作一个衍童石来出生角色和升级角色，然后可以使用play命令夺舍这个角色开始游戏。`);
+            console.log(`操作衍童石出生角色的命令：“born_actor ["大哥", -1, 2, [80,120,90,100,120,80,110,100], 10000]”。`);
+            console.log(`操作衍童石升级角色的命令：“upgrade_actor ["大哥"]”。\n`);
             rl.prompt();
             return;
         }

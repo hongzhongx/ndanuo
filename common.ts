@@ -20,8 +20,8 @@ async function writeFile(filename: string, data: Buffer) {
     })
 }
 
-export async function createAccount(username: string, password: string, server_url: string = "http://127.0.0.1:8080"): Promise<{status: boolean, name: string, new_nfa: number}> {
-    const response = await fetch(server_url + '/create', {
+export async function createAccount(username: string, password: string, server_url: string = "http://127.0.0.1:8080"): Promise<{status: boolean, name: string}> {
+    const response = await fetch(server_url + '/create_account', {
         method: 'POST',
         body: `username=${ username }&password=${ password }`,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -29,6 +29,45 @@ export async function createAccount(username: string, password: string, server_u
     const text = await response.text()
     if (response.status !== 200) {
         throw new Error(`Unable to create user: ${ text }`)
+    }    
+    return JSON.parse(text);
+}
+
+export async function giveMeYantongshi(username: string, server_url: string = "http://127.0.0.1:8080"): Promise<{status: boolean, name: string, new_nfa: number}> {
+    const response = await fetch(server_url + '/give_me_yantongshi', {
+        method: 'POST',
+        body: `username=${ username }`,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    })
+    const text = await response.text()
+    if (response.status !== 200) {
+        throw new Error(`Unable to create nfa to user: ${ text }`)
+    }    
+    return JSON.parse(text);
+}
+
+export async function injectMaterialToNfa(nfa_id: number, amount: number, type: string, server_url: string = "http://127.0.0.1:8080"): Promise<{status: boolean, nfa: number}> {
+    const response = await fetch(server_url + '/inject_material_to_nfa', {
+        method: 'POST',
+        body: `nfa=${ nfa_id }&amount=${ amount }&type=${ type }`,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    })
+    const text = await response.text()
+    if (response.status !== 200) {
+        throw new Error(`Unable to inject material to nfa: ${ text }`)
+    }    
+    return JSON.parse(text);
+}
+
+export async function depositResourceToNfa(nfa_id: number, amount: number, type: string, server_url: string = "http://127.0.0.1:8080"): Promise<{status: boolean, nfa: number}> {
+    const response = await fetch(server_url + '/deposit_resource_to_nfa', {
+        method: 'POST',
+        body: `nfa=${ nfa_id }&amount=${ amount }&type=${ type }`,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    })
+    const text = await response.text()
+    if (response.status !== 200) {
+        throw new Error(`Unable to deposit resource to nfa: ${ text }`)
     }    
     return JSON.parse(text);
 }
