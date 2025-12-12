@@ -72,6 +72,19 @@ export async function depositResourceToNfa(nfa_id: number, amount: number, type:
     return JSON.parse(text);
 }
 
+export async function giveMeActor(username: string, family_name: string, last_name: string,  server_url: string = "http://127.0.0.1:8080"): Promise<{status: boolean, name: string, new_nfa: number}> {
+    const response = await fetch(server_url + '/give_me_actor', {
+        method: 'POST',
+        body: `username=${ username }&family_name=${ family_name }&last_name=${ last_name }`,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    })
+    const text = await response.text()
+    if (response.status !== 200) {
+        throw new Error(`Unable to create actor to user: ${ text }`)
+    }    
+    return JSON.parse(text);
+}
+
 export function convertAsset(asset: any, price: any): any {
     const base_amount = parseFloat(price.base.amount) / (10 ** price.base.precision);
     assert(base_amount > 0);

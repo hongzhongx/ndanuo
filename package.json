@@ -4,7 +4,7 @@
     "start": "TS_NODE_FILES=1 ts-node app.ts"
   },
   "dependencies": {
-    "@taiyinet/taiyi-js": "^0.0.3",
+    "@taiyinet/taiyi-js": "^0.0.4",
     "body-parser": "^1.20.3",
     "express": "^4.21.2",
     "minimist": "^1.2.8"

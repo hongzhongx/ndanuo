@@ -2,10 +2,10 @@ import * as readline from 'readline';
 import * as ANSI from './ansi';
 import { 
     createAccount, giveMeYantongshi, injectMaterialToNfa, depositResourceToNfa,
-    convertAsset, legacyStringToAssect, assetToLegacyString 
+    convertAsset, legacyStringToAssect, assetToLegacyString, giveMeActor
 } from "./common";
 
-let server_ip = "127.0.0.1"
+let server_ip = "127.0.0.1" //"47.109.49.30"
 let taiyi = require('@taiyinet/taiyi-js');
 taiyi.api.setOptions({ 
 	url: 'ws://'+server_ip+':8090',
@@ -116,7 +116,7 @@ rl.on('line', async (input) => {
                     // const nfa = await taiyi.api.findNfaAsync(s.new_nfa);
                     console.log(`系统赠送了一个法宝${ANSI.BLU}${results.eval_result[0].value.v}${ANSI.NOR}（NFA序号=#${s.new_nfa}）。`);
                     console.log(`你可以使用play命令操控这个衍童石，命令是“play ${s.new_nfa}”。`);
-                    console.log(`操作衍童石安装在一个区域，命令是“set_zone [区域id]”。比如“set_zone [9]”将衍童石安装到牛心村。\n`);
+                    console.log(`操作衍童石安装在一个区域，命令是“set_zone [区域id]”。比如“set_zone [11]”将衍童石安装到牛心村。\n`);
                 }
                 else
                     console.log(`创建${ANSI.YEL}衍童石${ANSI.NOR}失败了！\n`);
@@ -185,18 +185,21 @@ rl.on('line', async (input) => {
             // new 角色姓氏 角色名
             let family_name = args[1];
             let last_name = args[2];
+            let succ = false;
             try {
                 const cfg = await taiyi.api.getConfigAsync();
                 const chainProps = await taiyi.api.getChainPropertiesAsync()
                 const fee = legacyStringToAssect(chainProps.account_creation_fee);
                 const qi_fee = convertAsset(fee, cfg.TAIYI_QI_SHARE_PRICE);
-                await taiyi.broadcast.createActorAsync(
-                    account_wif,
-                    assetToLegacyString(qi_fee),
-                    account_name,
-                    family_name,
-                    last_name
-                )
+
+                console.log(`正在创建角色...`);
+                const s = await giveMeActor(account_name, family_name, last_name, 'http://'+server_ip+':8080');
+                if(s.status == true) {
+                    console.log(`角色NFA#${s.new_nfa}创建成功。`);
+                    succ = true;
+                }
+                else
+                    console.log(`角色创建失败了！\n`);
             }
             catch(err) {
                 console.log(err.toString());
@@ -207,10 +210,13 @@ rl.on('line', async (input) => {
                 return;
             };
 
-            console.log(`创建角色${ANSI.YEL}${family_name}${last_name}${ANSI.NOR}成功。`);
-            console.log(`请操作一个衍童石来出生角色和升级角色，然后可以使用play命令夺舍这个角色开始游戏。`);
-            console.log(`操作衍童石出生角色的命令：“born_actor ["大哥", -1, 2, [80,120,90,100,120,80,110,100], 10000]”。`);
-            console.log(`操作衍童石升级角色的命令：“upgrade_actor ["大哥"]”。\n`);
+            if(succ == true) {
+                console.log(`创建角色${ANSI.YEL}${family_name}${last_name}${ANSI.NOR}成功。`);
+                console.log(`请操作一个衍童石来出生角色和升级角色，然后可以使用play命令夺舍这个角色开始游戏。`);
+                console.log(`操作衍童石出生角色的命令：“born_actor ["大哥", -1, 2, [80,120,90,100,120,80,110,100], 10000]”。`);
+                console.log(`操作衍童石升级角色的命令：“upgrade_actor ["大哥"]”。\n`);
+            }
+
             rl.prompt();
             return;
         }
